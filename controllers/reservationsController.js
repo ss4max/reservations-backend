@@ -87,7 +87,7 @@ const createNewReservation = asyncHandler(async (req, res) => {
     const { room, name, email, phone, howMany, checkInDate, checkOutDate, paymentStatus, paymentAmount, note } = req.body
 
     // Confirm data
-    if (!room || !name || !email || !phone || !howMany || !checkInDate || !checkOutDate || !paymentStatus || !paymentAmount) {
+    if (!room || !name || !email || !phone || !howMany || !checkInDate || !checkOutDate || !paymentAmount) {
         return res.status(400).json({ message: 'All fields required.' })
     }
 
@@ -140,11 +140,6 @@ const updateReservation = asyncHandler(async (req, res) => {
         return res.status(400).json({ message: 'Reservation not found' })
     }
 
-    let date1 = new Date(reservation.checkInDate)
-    let date2 = new Date(reservation.checkOutDate)
-
-    let currentCheckedInDates = createCheckedInDates(date1, date2);
-
     const roomModel = await Room.findOne({ roomName: room }).exec();
 
     if (!roomModel) {
@@ -152,11 +147,14 @@ const updateReservation = asyncHandler(async (req, res) => {
     }
 
     //remove original dates
+    let date1 = new Date(reservation.checkInDate)
+    let date2 = new Date(reservation.checkOutDate)
+    let currentCheckedInDates = createCheckedInDates(date1, date2);
     roomModel.datesOccupied = deleteDates(roomModel.datesOccupied, currentCheckedInDates)
 
+    //new dates
     let date3 = new Date(checkInDate)
     let date4 = new Date(checkOutDate)
-
     let newCheckedInDates = createCheckedInDates(date3, date4);
 
     //new check out date
@@ -206,7 +204,20 @@ const deleteReservation = asyncHandler(async (req, res) => {
 
     const result = await reservation.deleteOne()
 
-    const reply = `Reservation with ${result.name} with ID ${result._id} deleted`
+    //delete dates from room
+    let date1 = new Date(reservation.checkInDate)
+    let date2 = new Date(reservation.checkOutDate)
+    let currentCheckedInDates = createCheckedInDates(date1, date2);
+    const roomModel = await Room.findOne({ roomName: result.room }).exec();
+    roomModel.datesOccupied = deleteDates(roomModel.datesOccupied, currentCheckedInDates)
+
+    const updatedRoom = await roomModel.save()
+
+    if (!updatedRoom) {
+        res.json({ message: `${result.room} dates not updated` })
+    }
+
+    const reply = `Reservation with ${result.guest.name} with ID ${result._id} deleted`
 
     res.json(reply)
 })

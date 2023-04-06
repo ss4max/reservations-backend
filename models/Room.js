@@ -10,7 +10,11 @@ const roomSchema = new mongoose.Schema(
         datesOccupied: [{
             type: Date,
             required: false
-        }]
+        }],
+        roomPrice: {
+            type: Number,
+            required: true
+        }
     }
 )
 

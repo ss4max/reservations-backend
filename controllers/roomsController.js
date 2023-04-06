@@ -20,11 +20,11 @@ const getAllRooms = asyncHandler(async (req, res) => {
 // @route POST /rooms
 // @access Private
 const createNewRoom = asyncHandler(async (req, res) => {
-    const { roomName, datesOccupied } = req.body
+    const { roomName, datesOccupied, roomPrice } = req.body
 
     // Confirm data
-    if (!roomName) {
-        return res.status(400).json({ message: 'Room name is required' })
+    if (!roomName || !roomPrice) {
+        return res.status(400).json({ message: 'Room name and price is required' })
     }
 
     // Check for duplicate title
@@ -35,7 +35,7 @@ const createNewRoom = asyncHandler(async (req, res) => {
     }
 
     // Create and store the new room 
-    const newRoom = await Room.create({ roomName, datesOccupied })
+    const newRoom = await Room.create({ roomName, datesOccupied, roomPrice })
 
     if (newRoom) { // Created 
         return res.status(201).json({ message: 'New room created' })
@@ -49,11 +49,11 @@ const createNewRoom = asyncHandler(async (req, res) => {
 // @route PATCH /rooms
 // @access Private
 const updateRoom = asyncHandler(async (req, res) => {
-    const { id, roomName, datesOccupied } = req.body
+    const { id, roomName, datesOccupied, roomPrice } = req.body
 
     // Confirm data
-    if (!id || !roomName || !datesOccupied) {
-        return res.status(400).json({ message: 'All fields required' })
+    if (!id) {
+        return res.status(400).json({ message: 'ID required' })
     }
 
     // Confirm room exists to update
@@ -75,6 +75,7 @@ const updateRoom = asyncHandler(async (req, res) => {
 
     room.roomName = roomName
     room.datesOccupied = datesOccupied
+    room.roomPrice = roomPrice
 
     const updatedRoom = await room.save()
 
