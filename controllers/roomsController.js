@@ -20,11 +20,11 @@ const getAllRooms = asyncHandler(async (req, res) => {
 // @route POST /rooms
 // @access Private
 const createNewRoom = asyncHandler(async (req, res) => {
-    const { roomName, datesOccupied, roomPrice } = req.body
+    const { roomName, reservationId, datesOccupied, roomPrice } = req.body
 
     // Confirm data
     if (!roomName || !roomPrice) {
-        return res.status(400).json({ message: 'Room name and price is required' })
+        return res.status(400).json({ message: 'Room name, price, and reservation id is required' })
     }
 
     // Check for duplicate title
@@ -34,8 +34,18 @@ const createNewRoom = asyncHandler(async (req, res) => {
         return res.status(409).json({ message: 'Duplicate room' })
     }
 
+    // Create objects with date and reservationId for datesOccupied array
+    const datesOccupiedArray = datesOccupied.map(date => tempObj = { date: date, reservationId: reservationId });
+
+    const myDocument = new Room({
+        roomName: roomName,
+        reservationId: reservationId,
+        datesOccupied: datesOccupiedArray,
+        roomPrice: roomPrice
+    });
+
     // Create and store the new room 
-    const newRoom = await Room.create({ roomName, datesOccupied, roomPrice })
+    const newRoom = await Room.create(myDocument)
 
     if (newRoom) { // Created 
         return res.status(201).json({ message: 'New room created' })
@@ -49,7 +59,7 @@ const createNewRoom = asyncHandler(async (req, res) => {
 // @route PATCH /rooms
 // @access Private
 const updateRoom = asyncHandler(async (req, res) => {
-    const { id, roomName, datesOccupied, roomPrice } = req.body
+    const { id, roomName, reservationId, datesOccupied, roomPrice } = req.body
 
     // Confirm data
     if (!id) {
@@ -71,10 +81,11 @@ const updateRoom = asyncHandler(async (req, res) => {
         return res.status(409).json({ message: 'Duplicate room' })
     }
 
-
+    // Create objects with date and reservationId for datesOccupied array
+    const datesOccupiedArray = datesOccupied.map(date => tempObj = { date: date, reservationId: reservationId });
 
     room.roomName = roomName
-    room.datesOccupied = datesOccupied
+    room.datesOccupied = datesOccupiedArray
     room.roomPrice = roomPrice
 
     const updatedRoom = await room.save()

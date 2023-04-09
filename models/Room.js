@@ -1,21 +1,29 @@
 const mongoose = require('mongoose')
 const AutoIncrement = require('mongoose-sequence')(mongoose)
 
-const roomSchema = new mongoose.Schema(
-    {
-        roomName: {
-            type: String,
-            required: true
-        },
-        datesOccupied: [{
-            type: Date,
-            required: false
-        }],
-        roomPrice: {
-            type: Number,
-            required: true
-        }
+const Schema = mongoose.Schema;
+
+const DatesOccupiedSchema = new Schema({
+    date: {
+        type: Date,
+        required: true
+    },
+    reservationId: {
+        type: String,
+        required: true
     }
-)
+})
+
+const roomSchema = new Schema({
+    roomName: {
+        type: String,
+        required: true
+    },
+    datesOccupied: [DatesOccupiedSchema],
+    roomPrice: {
+        type: Number,
+        required: true
+    }
+})
 
 module.exports = mongoose.model('Room', roomSchema)

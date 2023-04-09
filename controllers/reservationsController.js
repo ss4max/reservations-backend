@@ -1,9 +1,11 @@
 const Reservation = require('../models/Reservation')
 const asyncHandler = require('express-async-handler')
 const Room = require('../models/Room')
-const bcrypt = require('bcrypt')
 
-function hasDate(occupiedDates, reservationDates) {
+function hasDate(occupiedDateObjects, reservationDates) {
+
+    //create an array of dates (no reservationId)
+    const occupiedDates = getDatesArray(occupiedDateObjects)
 
     let foundBoolean = false
 
@@ -15,22 +17,6 @@ function hasDate(occupiedDates, reservationDates) {
     });
 
     return foundBoolean
-}
-
-function deleteDates(dates, deleteTheseDates) {
-
-    console.log(dates)
-    console.log(deleteTheseDates)
-
-    let filteredDates = dates
-
-    deleteTheseDates.forEach(deleteThisDate => {
-        filteredDates = filteredDates.filter(date => date !== deleteThisDate)
-    });
-
-    console.log(filteredDates)
-
-    return filteredDates
 }
 
 function createCheckedInDates(checkIn, checkOut) {
@@ -60,9 +46,31 @@ function getDates(times) {
     return tempArray
 }
 
-function deleteDates(dates, deleteTheseDates) {
+const getDatesArray = (datesArrayObj) => {
+    return datesArrayObj.map((obj) => obj.date);
+}
+
+function deleteDates(datesArrayOfObjects, deleteTheseDates) {
+
+    const reservationId = datesArrayOfObjects[0]?.reservationId
+
+    //create an array of dates (no reservationId)
+    const dates = getDatesArray(datesArrayOfObjects)
+
+    //deletes dates of different time
     const arrayOfDifferentTimes = getTimes(dates).filter((x) => !getTimes(deleteTheseDates).includes(x));
-    return getDates(arrayOfDifferentTimes)
+
+    const arrayOfDates = getDates(arrayOfDifferentTimes)
+
+    //add reservationId back to each date
+    const datesOccupiedArrayOfObjects = arrayOfDates.map(date => tempObj = { date: date, reservationId: reservationId });
+
+    return datesOccupiedArrayOfObjects
+}
+
+function addReservationId(dates, reservationId) {
+    const datesOccupiedArrayOfObjects = dates.map(date => tempObj = { date: date, reservationId: reservationId });
+    return datesOccupiedArrayOfObjects
 }
 
 // @desc Get all reservations
@@ -106,14 +114,16 @@ const createNewReservation = asyncHandler(async (req, res) => {
         return res.status(409).json({ message: 'Double booked room' })
     }
 
-    roomModel.datesOccupied.push(...checkedInDates)
-
-    const updatedRoom = await roomModel.save()
-
     const reservationObject = { room, guest: { name, email, phone, howMany }, checkInDate, checkOutDate, paymentStatus, paymentAmount, note }
 
     // Create and store new reservation 
     const reservation = await Reservation.create(reservationObject)
+
+    const checkedInDatesObjects = addReservationId(checkedInDates, reservation.id)
+
+    roomModel.datesOccupied.push(...checkedInDatesObjects)
+
+    const updatedRoom = await roomModel.save()
 
     if (reservation && updatedRoom) { //created 
         res.status(201).json({ message: `New reservation for ${name} created` })
@@ -162,7 +172,9 @@ const updateReservation = asyncHandler(async (req, res) => {
         return res.status(409).json({ message: 'Double booked room' })
     }
 
-    roomModel.datesOccupied.push(...newCheckedInDates)
+    const newCheckedInDateObjects = addReservationId(newCheckedInDates, id)
+
+    roomModel.datesOccupied.push(...newCheckedInDateObjects)
 
     const updatedRoom = await roomModel.save()
 
