@@ -1,10 +1,9 @@
 const Room = require('../models/Room')
-const asyncHandler = require('express-async-handler')
 
 // @desc Get all rooms 
 // @route GET /rooms
 // @access Private
-const getAllRooms = asyncHandler(async (req, res) => {
+const getAllRooms = async (req, res) => {
     // Get all rooms from MongoDB
     const rooms = await Room.find().lean()
 
@@ -14,12 +13,12 @@ const getAllRooms = asyncHandler(async (req, res) => {
     }
 
     res.json(rooms)
-})
+}
 
 // @desc Create new room
 // @route POST /rooms
 // @access Private
-const createNewRoom = asyncHandler(async (req, res) => {
+const createNewRoom = async (req, res) => {
     const { roomName, reservationId, datesOccupied, roomPrice } = req.body
 
     // Confirm data
@@ -28,19 +27,19 @@ const createNewRoom = asyncHandler(async (req, res) => {
     }
 
     // Check for duplicate title
-    const duplicate = await Room.findOne({ roomName }).lean().exec()
+    const duplicate = await Room.findOne({ roomName }).collation({ locale: 'en', strength: 2 }).lean().exec()
 
     if (duplicate) {
         return res.status(409).json({ message: 'Duplicate room' })
     }
 
     // Create objects with date and reservationId for datesOccupied array
-    const datesOccupiedArray = datesOccupied.map(date => tempObj = { date: date, reservationId: reservationId });
+    // const datesOccupiedArray = datesOccupied.map(date => tempObj = { date: date, reservationId: reservationId });
 
     const myDocument = new Room({
         roomName: roomName,
-        reservationId: reservationId,
-        datesOccupied: datesOccupiedArray,
+        reservationId: null,
+        datesOccupied: [],
         roomPrice: roomPrice
     });
 
@@ -53,12 +52,12 @@ const createNewRoom = asyncHandler(async (req, res) => {
         return res.status(400).json({ message: 'Invalid room data received' })
     }
 
-})
+}
 
 // @desc Update a room
 // @route PATCH /rooms
 // @access Private
-const updateRoom = asyncHandler(async (req, res) => {
+const updateRoom = async (req, res) => {
     const { id, roomName, reservationId, datesOccupied, roomPrice } = req.body
 
     // Confirm data
@@ -74,7 +73,7 @@ const updateRoom = asyncHandler(async (req, res) => {
     }
 
     // Check for duplicate title
-    const duplicate = await Room.findOne({ roomName }).lean().exec()
+    const duplicate = await Room.findOne({ roomName }).collation({ locale: 'en', strength: 2 }).lean().exec()
 
     // Allow renaming of the original room 
     if (duplicate && duplicate?._id.toString() !== id) {
@@ -91,12 +90,12 @@ const updateRoom = asyncHandler(async (req, res) => {
     const updatedRoom = await room.save()
 
     res.json(`'${updatedRoom.roomName}' updated`)
-})
+}
 
 // @desc Delete a room
 // @route DELETE /rooms
 // @access Private
-const deleteRoom = asyncHandler(async (req, res) => {
+const deleteRoom = async (req, res) => {
     const { id } = req.body
 
     // Confirm data
@@ -116,7 +115,7 @@ const deleteRoom = asyncHandler(async (req, res) => {
     const reply = `Room '${result.roomName}' with ID ${result._id} deleted`
 
     res.json(reply)
-})
+}
 
 module.exports = {
     getAllRooms,

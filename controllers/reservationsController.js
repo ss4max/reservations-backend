@@ -1,5 +1,4 @@
 const Reservation = require('../models/Reservation')
-const asyncHandler = require('express-async-handler')
 const Room = require('../models/Room')
 
 function hasDate(occupiedDateObjects, reservationDates) {
@@ -76,7 +75,7 @@ function addReservationId(dates, reservationId) {
 // @desc Get all reservations
 // @route GET /reservations
 // @access Private
-const getAllReservations = asyncHandler(async (req, res) => {
+const getAllReservations = async (req, res) => {
     // Get all reservations from MongoDB
     const reservations = await Reservation.find().lean()
 
@@ -86,12 +85,12 @@ const getAllReservations = asyncHandler(async (req, res) => {
     }
 
     res.json(reservations)
-})
+}
 
 // @desc Create new reservation
 // @route POST /reservation
 // @access Private
-const createNewReservation = asyncHandler(async (req, res) => {
+const createNewReservation = async (req, res) => {
     const { room, name, email, phone, howMany, checkInDate, checkOutDate, paymentStatus, paymentAmount, note } = req.body
 
     // Confirm data
@@ -130,12 +129,12 @@ const createNewReservation = asyncHandler(async (req, res) => {
     } else {
         res.status(400).json({ message: 'Invalid reservation data received' })
     }
-})
+}
 
 // @desc Update a reservation
 // @route PATCH /reservations
 // @access Private
-const updateReservation = asyncHandler(async (req, res) => {
+const updateReservation = async (req, res) => {
     const { id, room, name, email, phone, howMany, checkInDate, checkOutDate, paymentStatus, paymentAmount, note } = req.body
 
     // Confirm data 
@@ -194,12 +193,12 @@ const updateReservation = asyncHandler(async (req, res) => {
     if (updatedReservation && updatedRoom) { //created 
         res.json({ message: `${updatedReservation.guest.name} updated` })
     }
-})
+}
 
 // @desc Delete a reservation
 // @route DELETE /reservations
 // @access Private
-const deleteReservation = asyncHandler(async (req, res) => {
+const deleteReservation = async (req, res) => {
     const { id } = req.body
 
     // Confirm data
@@ -232,7 +231,7 @@ const deleteReservation = asyncHandler(async (req, res) => {
     const reply = `Reservation with ${result.guest.name} with ID ${result._id} deleted`
 
     res.json(reply)
-})
+}
 
 module.exports = {
     getAllReservations,

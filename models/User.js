@@ -9,10 +9,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    roles: [{
-        type: String,
-        default: "Employee"
-    }]
+    roles: {
+        type: [String],
+        default: ["Employee"]
+    },
 })
 
 module.exports = mongoose.model('User', userSchema)
