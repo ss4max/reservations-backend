@@ -22,7 +22,6 @@ const getAllTransactions = async (req, res) => {
 
 // @desc Create new transaction
 // @route POST /transactions
-// @access Private
 const createNewTransaction = async (req, res) => {
     const { token, source, reservationId, amount, currency } = req.body
 
@@ -39,35 +38,30 @@ const createNewTransaction = async (req, res) => {
         return res.status(409).json({ message: 'Duplicate found' })
     }
 
-    let paid
-
-    omise.charges.create({
+    const charge = await omise.charges.create({
         amount: `${amount * 100}`, // 0.01 * 100 = 1 Baht
         currency: currency,
         capture: false,
         card: token
-    }, function (err, resp) {
-        if (err) {
-            paid = false
-            console.log(err?.message)
-            return res.status(400).json({ message: err?.message });
-        } else if (resp.paid) {
-            paid = true
-            return "Success"
-        }
-        else if (resp?.failure_message || resp?.failure_code) {
-            return `${resp?.failure_code}: ${resp?.failure_message}`
-        }
     })
 
-    if (!paid) return res.status(400).json({ message: response });
+    if (charge?.failure_message || charge?.failure_code) {
+        return res.status(400).json({ message: `${charge?.failure_code}: ${charge?.failure_message}` })
+    }
+
+    const capture = await omise.charges.capture(charge?.id)
+
+    if (!capture?.paid) {
+        return res.status(400).json({ message: `Error during charge capture ${capture?.failure_code}: ${capture?.failure_message}` })
+    }
 
     let transactionObject = new Transaction({
         token,
         source,
         reservationId,
         amount,
-        currency
+        currency,
+        charge: capture
     })
 
     // Create and store new transaction 
@@ -84,45 +78,46 @@ const createNewTransaction = async (req, res) => {
 // @route PATCH /transactions
 // @access Private
 const updateTransaction = async (req, res) => {
-    const { id, token, source, reservationId, amount, currency } = req.body
+    // const { id, token, source, reservationId, amount, currency } = req.body
 
-    // Confirm data 
-    if (reservationId) {
-        return res.status(400).json({ message: 'Reservation ID required' })
-    }
+    // // Confirm data 
+    // if (reservationId) {
+    //     return res.status(400).json({ message: 'Reservation ID required' })
+    // }
 
-    // Does the transaction exist to update?
-    const transaction = await Transaction.findById(id).exec()
+    // // Does the transaction exist to update?
+    // const transaction = await Transaction.findById(id).exec()
 
-    if (!transaction) {
-        return res.status(400).json({ message: 'Transaction not found' })
-    }
+    // if (!transaction) {
+    //     return res.status(400).json({ message: 'Transaction not found' })
+    // }
 
-    // Check for duplicate token
-    const duplicateToken = await Transaction.findOne({ token }).collation({ locale: 'en', strength: 2 }).lean().exec()
+    // // Check for duplicate token
+    // const duplicateToken = await Transaction.findOne({ token }).collation({ locale: 'en', strength: 2 }).lean().exec()
 
-    // Allow updates to the original transaction 
-    if (duplicateToken && duplicateToken?._id.toString() !== id) {
-        return res.status(409).json({ message: 'Duplicate token' })
-    }
+    // // Allow updates to the original transaction 
+    // if (duplicateToken && duplicateToken?._id.toString() !== id) {
+    //     return res.status(409).json({ message: 'Duplicate token' })
+    // }
 
-    // Check for duplicate source
-    const duplicateSource = await Transaction.findOne({ token }).collation({ locale: 'en', strength: 2 }).lean().exec()
+    // // Check for duplicate source
+    // const duplicateSource = await Transaction.findOne({ token }).collation({ locale: 'en', strength: 2 }).lean().exec()
 
-    // Allow updates to the original transaction 
-    if (duplicateSource && duplicateSource?._id.toString() !== id) {
-        return res.status(409).json({ message: 'Duplicate source' })
-    }
+    // // Allow updates to the original transaction 
+    // if (duplicateSource && duplicateSource?._id.toString() !== id) {
+    //     return res.status(409).json({ message: 'Duplicate source' })
+    // }
 
-    transaction.token = token
-    transaction.source = source
-    transaction.reservationId = reservationId
-    transaction.amount = amount
-    transaction.currency = currency
+    // transaction.token = token
+    // transaction.source = source
+    // transaction.reservationId = reservationId
+    // transaction.amount = amount
+    // transaction.currency = currency
 
-    const updatedTransaction = await transaction.save()
+    // const updatedTransaction = await transaction.save()
 
-    res.json({ message: `Reservation ID: ${updatedTransaction.reservationId} updated` })
+    // res.json({ message: `Reservation ID: ${updatedTransaction.reservationId} updated` })
+    res.json({ message: `Not allowed to modify transactions. Nothing changed` })
 }
 
 // @desc Delete a transaction

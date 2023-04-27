@@ -18,6 +18,10 @@ const transactionSchema = new mongoose.Schema({
     currency: {
         type: String,
         required: true
+    },
+    charge: {
+        type: Object,
+        required: true
     }
 },
     {
