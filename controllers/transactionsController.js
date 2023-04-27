@@ -4,6 +4,7 @@ var omise = require('omise')({
 })
 
 const Transaction = require('../models/Transaction')
+const Webhook = require('../models/Webhook')
 
 // @desc Get all transactions
 // @route GET /transactions
@@ -38,12 +39,27 @@ const createNewTransaction = async (req, res) => {
         return res.status(409).json({ message: 'Duplicate found' })
     }
 
-    const charge = await omise.charges.create({
+    //Credit Card
+    let charge = await omise.charges.create({
         amount: `${amount * 100}`, // 0.01 * 100 = 1 Baht
         currency: currency,
         capture: false,
-        card: token
+        card: token,
+        source: source
     })
+
+    const qrCode = charge?.source?.scannable_code?.image.download_uri
+
+    let webhook = await Webhook.findOne({ sourceId: charge?.source?.id, key: "charge.complete" }).lean().exec()
+
+    while (!webhook) {
+        webhook = await Webhook.findOne({ sourceId: charge?.source?.id, key: "charge.complete" }).lean().exec()
+    }
+
+    //what to do with charge?
+    charge = await omise.charges.retrieve(webhook?.data?.id);
+
+    console.log(charge);
 
     if (charge?.failure_message || charge?.failure_code) {
         return res.status(400).json({ message: `${charge?.failure_code}: ${charge?.failure_message}` })
@@ -54,6 +70,26 @@ const createNewTransaction = async (req, res) => {
     if (!capture?.paid) {
         return res.status(400).json({ message: `Error during charge capture ${capture?.failure_code}: ${capture?.failure_message}` })
     }
+
+    // //PromptPay
+    // const chargeQR = await omise.charges.create({
+    //     amount: `${amount * 100}`, // 0.01 * 100 = 1 Baht
+    //     currency: currency,
+    //     capture: false,
+    //     card: token
+    // })
+
+    // if (chargeQR?.failure_message || chargeQR?.failure_code) {
+    //     return res.status(400).json({ message: `${chargeQR?.failure_code}: ${chargeQR?.failure_message}` })
+    // }
+
+    // const captureQR = await omise.charges.capture(chargeQR?.id)
+
+    // if (!captureQR?.paid) {
+    //     return res.status(400).json({ message: `Error during charge captureQR ${captureQR?.failure_code}: ${captureQR?.failure_message}` })
+    // }
+
+    return res.status(400).json({ message: `Testing` })
 
     let transactionObject = new Transaction({
         token,
