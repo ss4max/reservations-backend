@@ -24,11 +24,9 @@ const createNewPromptPay = async (req, res) => {
         return res.status(400).json({ message: 'All fields required' })
     }
 
-    let webhook = await Webhook.findOne({ charge: charge, key: "charge.complete" })
+    const webhook = await Webhook.findOne({ charge: charge, key: "charge.complete" })
 
-    while (!webhook) {
-        webhook = await Webhook.findOne({ charge: charge, key: "charge.complete" })
-    }
+    if (!webhook) return res.status(400).json({ message: 'Payment not completed' })
 
     webhook.completed = true
 
