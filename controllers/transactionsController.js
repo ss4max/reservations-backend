@@ -89,8 +89,6 @@ const createNewTransaction = async (req, res) => {
     //     return res.status(400).json({ message: `Error during charge captureQR ${captureQR?.failure_code}: ${captureQR?.failure_message}` })
     // }
 
-    return res.status(400).json({ message: `Testing` })
-
     let transactionObject = new Transaction({
         token,
         source,

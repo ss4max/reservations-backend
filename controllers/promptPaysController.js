@@ -1,33 +1,33 @@
 var omise = require('omise')({
-    'secretKey': process.env.OMISE_TOKEN_SECRET,
+    'secretKey': process.env.OMISE_SOURCE_SECRET,
     'omiseVersion': '2019-05-29'
 })
 
 const Transaction = require('../models/Transaction')
 
-// @desc Get all cards
-// @route GET /cards
+// @desc Get all promptPays
+// @route GET /promptPays
 // @access Private
-const getAllCards = async (req, res) => {
+const getAllPromptPays = async (req, res) => {
     res.status(400).json({ message: 'Transactions found in /transactions' })
 }
 
-// @desc Create new card
-// @route POST /cards
-const createNewCard = async (req, res) => {
-    const { token, reservationId, amount, currency } = req.body
+// @desc Create new promptPay
+// @route POST /promptPays
+const createNewPromptPay = async (req, res) => {
+    const { source, reservationId, amount, currency } = req.body
 
     // Confirm data
-    if (!token || !reservationId || !amount || !currency) {
+    if (!source || !reservationId || !amount || !currency) {
         return res.status(400).json({ message: 'All fields required' })
     }
 
-    //Credit Card
+    //Credit PromptPay
     let charge = await omise.charges.create({
         amount: `${amount * 100}`, // 0.01 * 100 = 1 Baht
         currency: currency,
         capture: false,
-        card: token,
+        source: source,
     })
 
     if (charge?.failure_message || charge?.failure_code) {
@@ -43,7 +43,7 @@ const createNewCard = async (req, res) => {
     //return res.status(400).json({ message: `Testing` })
 
     let transactionObject = new Transaction({
-        token,
+        source,
         reservationId,
         amount,
         currency,
@@ -61,23 +61,23 @@ const createNewCard = async (req, res) => {
 }
 
 
-// @desc Update a card
-// @route PATCH /cards
+// @desc Update a promptPay
+// @route PATCH /promptPays
 // @access Private
-const updateCard = async (req, res) => {
+const updatePromptPay = async (req, res) => {
     res.json({ message: `Nothing to modify` })
 }
 
-// @desc Delete a card
-// @route DELETE /cards
+// @desc Delete a promptPay
+// @route DELETE /promptPays
 // @access Private
-const deleteCard = async (req, res) => {
+const deletePromptPay = async (req, res) => {
     res.json({ message: `Nothing to modify` })
 }
 
 module.exports = {
-    getAllCards,
-    createNewCard,
-    updateCard,
-    deleteCard
+    getAllPromptPays,
+    createNewPromptPay,
+    updatePromptPay,
+    deletePromptPay
 }
