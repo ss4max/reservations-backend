@@ -33,6 +33,7 @@ app.use('/reservations', require('./routes/reservationRoutes'))
 app.use('/rooms', require('./routes/roomRoutes'))
 app.use('/transactions', require('./routes/transactionRoutes'))
 app.use('/webhooks', require('./routes/webhookRoutes'))
+app.use('/cards', require('./routes/cardRoutes'))
 
 app.all('*', (req, res) => {
     res.status(404)
