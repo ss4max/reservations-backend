@@ -21,7 +21,7 @@ const getAllWebhooks = async (req, res) => {
 const createNewWebhook = async (req, res) => {
     const { id, data, key } = req.body
 
-    const webhookObject = { sourceId: data?.source?.id, data, key }
+    const webhookObject = { charge: data?.id, data, key }
 
     // Create and store new webhook 
     const webhook = await Webhook.create(webhookObject)
@@ -37,25 +37,7 @@ const createNewWebhook = async (req, res) => {
 // @route PATCH /webhooks
 // @access Private
 const updateWebhook = async (req, res) => {
-    const { id, completed } = req.body
-
-    // Confirm data 
-    if (!id) {
-        return res.status(400).json({ message: 'ID is required' })
-    }
-
-    // Does the webhook exist to update?
-    const webhook = await Webhook.findById(id).exec()
-
-    if (!webhook) {
-        return res.status(400).json({ message: 'Webhook not found' })
-    }
-
-    webhook.completed = completed
-
-    const updatedWebhook = await webhook.save()
-
-    res.json({ message: `${updatedWebhook.id} updated` })
+    res.json({ message: `Update webhook happens in /promptPays` })
 }
 
 // @desc Delete a webhook

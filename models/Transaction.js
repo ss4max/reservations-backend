@@ -1,12 +1,6 @@
 const mongoose = require('mongoose')
 
 const transactionSchema = new mongoose.Schema({
-    token: {
-        type: String,
-    },
-    source: {
-        type: String,
-    },
     reservationId: {
         type: String,
         required: true

@@ -1,7 +1,7 @@
 const mongoose = require('mongoose')
 
 const webhookSchema = new mongoose.Schema({
-    sourceId: String,
+    charge: String,
     data: Object,
     key: String,
     completed: {

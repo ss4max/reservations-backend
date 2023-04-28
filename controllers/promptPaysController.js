@@ -1,9 +1,11 @@
 var omise = require('omise')({
-    'secretKey': process.env.OMISE_SOURCE_SECRET,
+    'secretKey': process.env.OMISE_TOKEN_SECRET,
     'omiseVersion': '2019-05-29'
 })
 
 const Transaction = require('../models/Transaction')
+const Webhook = require('../models/Webhook')
+
 
 // @desc Get all promptPays
 // @route GET /promptPays
@@ -15,45 +17,54 @@ const getAllPromptPays = async (req, res) => {
 // @desc Create new promptPay
 // @route POST /promptPays
 const createNewPromptPay = async (req, res) => {
-    const { source, reservationId, amount, currency } = req.body
+    const { charge, reservationId } = req.body
 
     // Confirm data
-    if (!source || !reservationId || !amount || !currency) {
+    if (!charge || !reservationId) {
         return res.status(400).json({ message: 'All fields required' })
     }
 
-    //Credit PromptPay
-    let charge = await omise.charges.create({
-        amount: `${amount * 100}`, // 0.01 * 100 = 1 Baht
-        currency: currency,
-        capture: false,
-        source: source,
-    })
+    let webhook = await Webhook.findOne({ charge: charge, key: "charge.complete" })
 
-    if (charge?.failure_message || charge?.failure_code) {
-        return res.status(400).json({ message: `${charge?.failure_code}: ${charge?.failure_message}` })
+    while (!webhook) {
+        webhook = await Webhook.findOne({ charge: charge, key: "charge.complete" })
     }
 
-    const capture = await omise.charges.capture(charge?.id)
+    webhook.completed = true
 
-    if (!capture?.paid) {
-        return res.status(400).json({ message: `Error during charge capture ${capture?.failure_code}: ${capture?.failure_message}` })
+    const updatedWebhook = await webhook.save()
+
+    if (!updatedWebhook) return res.status(400).json({ message: 'Updating webhook failed' })
+
+    chargeCompleted = await omise.charges.retrieve(webhook?.data?.id);
+
+    if (chargeCompleted?.failure_message || chargeCompleted?.failure_code) {
+        return res.status(400).json({ message: `${chargeCompleted?.failure_code}: ${chargeCompleted?.failure_message}` })
     }
 
-    //return res.status(400).json({ message: `Testing` })
+    if (!chargeCompleted?.paid) {
+        return res.status(400).json({ message: `Error during transaction ${chargeCompleted?.failure_code}: ${chargeCompleted?.failure_message}` })
+    }
+
+    // Check for duplicate reservationId and charge
+    const duplicateReservationId = await Transaction.findOne({ reservationId }).collation({ locale: 'en', strength: 2 }).lean().exec()
+    const duplicateCharge = await Transaction.findOne({ charge: charge?.id }).collation({ locale: 'en', strength: 2 }).lean().exec()
+
+    if (duplicateReservationId || duplicateCharge) {
+        return res.status(409).json({ message: 'Duplicate found' })
+    }
 
     let transactionObject = new Transaction({
-        source,
         reservationId,
-        amount,
-        currency,
-        charge: capture
+        amount: chargeCompleted?.amount / 100,
+        currency: chargeCompleted?.currency,
+        charge: chargeCompleted
     })
 
     // Create and store new transaction 
     const transaction = await Transaction.create(transactionObject)
 
-    if (transaction && capture?.paid) { //created 
+    if (transaction && chargeCompleted?.paid) { //created 
         res.status(201).json({ message: `New transaction for Reservation ID: ${reservationId} created` })
     } else {
         res.status(400).json({ message: 'Invalid transaction data received' })

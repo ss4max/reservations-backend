@@ -35,6 +35,7 @@ app.use('/transactions', require('./routes/transactionRoutes'))
 app.use('/webhooks', require('./routes/webhookRoutes'))
 app.use('/cards', require('./routes/cardRoutes'))
 app.use('/promptPays', require('./routes/promptPayRoutes'))
+app.use('/qrCodes', require('./routes/qrCodeRoutes'))
 
 app.all('*', (req, res) => {
     res.status(404)
