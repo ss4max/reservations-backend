@@ -4,6 +4,8 @@ var omise = require('omise')({
 })
 
 const Transaction = require('../models/Transaction')
+const Reservation = require('../models/Reservation')
+
 
 // @desc Get all transactions
 // @route GET /transactions
@@ -38,6 +40,13 @@ const createNewTransaction = async (req, res) => {
         return res.status(409).json({ message: 'Duplicate found' })
     }
 
+    const reservation = await Reservation.findOne({ id: reservationId })
+
+    if (!reservation) return res.status(400).json({ message: 'Reservation not found' })
+
+    reservation.paymentStatus = 'paid'
+
+    reservation.save()
 
     let transactionObject = new Transaction({
         reservationId,
