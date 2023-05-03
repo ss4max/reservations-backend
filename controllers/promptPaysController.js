@@ -51,7 +51,7 @@ const createNewPromptPay = async (req, res) => {
         return res.status(409).json({ message: 'Duplicate found' })
     }
 
-    const reservation = await Reservation.findOne({ id: reservationId })
+    const reservation = await Reservation.findById(reservationId)
 
     if (!reservation) return res.status(400).json({ message: 'Reservation not found' })
 
