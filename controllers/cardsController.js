@@ -4,6 +4,7 @@ var omise = require('omise')({
 })
 
 const Transaction = require('../models/Transaction')
+const Reservation = require('../models/Reservation')
 
 // @desc Get all cards
 // @route GET /cards
@@ -41,12 +42,21 @@ const createNewCard = async (req, res) => {
     }
 
     // Check for duplicate reservationId and charge
-    const duplicateReservationId = await Transaction.findOne({ reservationId }).collation({ locale: 'en', strength: 2 }).lean().exec()
     const duplicateCharge = await Transaction.findOne({ charge: capture?.id }).collation({ locale: 'en', strength: 2 }).lean().exec()
 
-    if (duplicateReservationId || duplicateCharge) {
+    if (duplicateCharge) {
         return res.status(409).json({ message: 'Duplicate found' })
     }
+
+    const reservation = await Reservation.findOne({ id: reservationId })
+
+    if (!reservation) return res.status(400).json({ message: 'Reservation not found' })
+
+    reservation.paymentStatus = 'paid'
+
+    const updatedReservation = await reservation.save()
+
+    if (!updatedReservation) return res.status(400).json({ message: 'Reservation not paid' })
 
     let transactionObject = new Transaction({
         token,

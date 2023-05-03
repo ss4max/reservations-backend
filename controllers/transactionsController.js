@@ -33,10 +33,9 @@ const createNewTransaction = async (req, res) => {
     }
 
     // Check for duplicate reservationId and charge
-    const duplicateReservationId = await Transaction.findOne({ reservationId }).collation({ locale: 'en', strength: 2 }).lean().exec()
     const duplicateCharge = await Transaction.findOne({ charge: charge?.id }).collation({ locale: 'en', strength: 2 }).lean().exec()
 
-    if (duplicateReservationId || duplicateCharge) {
+    if (duplicateCharge) {
         return res.status(409).json({ message: 'Duplicate found' })
     }
 
@@ -46,7 +45,9 @@ const createNewTransaction = async (req, res) => {
 
     reservation.paymentStatus = 'paid'
 
-    reservation.save()
+    const updatedReservation = await reservation.save()
+
+    if (!updatedReservation) return res.status(400).json({ message: 'Reservation not paid' })
 
     let transactionObject = new Transaction({
         reservationId,
