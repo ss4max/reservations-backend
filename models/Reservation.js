@@ -19,9 +19,13 @@ const reservationSchema = new mongoose.Schema(
                 type: String,
                 required: true
             },
-            howMany: {
+            adults: {
                 type: Number,
                 required: true
+            },
+            kids: {
+                type: Number,
+                default: 0
             }
         },
         checkInDate: {

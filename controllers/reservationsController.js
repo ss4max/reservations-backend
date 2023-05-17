@@ -91,10 +91,10 @@ const getAllReservations = async (req, res) => {
 // @route POST /reservation
 // @access Private
 const createNewReservation = async (req, res) => {
-    const { room, name, email, phone, howMany, checkInDate, checkOutDate, paymentStatus, paymentAmount, note } = req.body
+    const { room, name, email, phone, adults, kids, checkInDate, checkOutDate, paymentStatus, paymentAmount, note } = req.body
 
     // Confirm data
-    if (!room || !name || !email || !phone || !howMany || !checkInDate || !checkOutDate || !paymentAmount) {
+    if (!room || !name || !email || !phone || !adults || !checkInDate || !checkOutDate || !paymentAmount) {
         return res.status(400).json({ message: 'All fields required.' })
     }
 
@@ -113,7 +113,7 @@ const createNewReservation = async (req, res) => {
         return res.status(409).json({ message: 'Double booked room' })
     }
 
-    const reservationObject = { room, guest: { name, email, phone, howMany }, checkInDate, checkOutDate, paymentStatus, paymentAmount, note }
+    const reservationObject = { room, guest: { name, email, phone, adults, kids }, checkInDate, checkOutDate, paymentStatus, paymentAmount, note }
 
     // Create and store new reservation 
     const reservation = await Reservation.create(reservationObject)
@@ -135,7 +135,7 @@ const createNewReservation = async (req, res) => {
 // @route PATCH /reservations
 // @access Private
 const updateReservation = async (req, res) => {
-    const { id, room, name, email, phone, howMany, checkInDate, checkOutDate, paymentStatus, paymentAmount, note } = req.body
+    const { id, room, name, email, phone, adults, kids, checkInDate, checkOutDate, paymentStatus, paymentAmount, note } = req.body
 
     // Confirm data 
     if (!id) {
@@ -181,7 +181,8 @@ const updateReservation = async (req, res) => {
     reservation.guest.name = name
     reservation.guest.email = email
     reservation.guest.phone = phone
-    reservation.guest.howMany = howMany
+    reservation.guest.adults = adults
+    reservation.guest.kids = kids
     reservation.checkInDate = checkInDate
     reservation.checkOutDate = checkOutDate
     reservation.paymentStatus = paymentStatus
