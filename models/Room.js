@@ -22,7 +22,15 @@ const roomSchema = new Schema({
     roomPrice: {
         type: Number,
         required: true
-    }
+    },
+    roomDescription: {
+        type: String,
+        required: true
+    },
+    roomImages: {
+        type: [String],
+        required: true
+    },
 })
 
 module.exports = mongoose.model('Room', roomSchema)

@@ -19,10 +19,10 @@ const getAllRooms = async (req, res) => {
 // @route POST /rooms
 // @access Private
 const createNewRoom = async (req, res) => {
-    const { roomName, reservationId, datesOccupied, roomPrice } = req.body
+    const { roomName, reservationId, datesOccupied, roomPrice, roomDescription, roomImages } = req.body
 
     // Confirm data
-    if (!roomName || !roomPrice) {
+    if (!roomName || !roomPrice || !roomDescription || !roomImages) {
         return res.status(400).json({ message: 'Room name, price, and reservation id is required' })
     }
 
@@ -40,7 +40,9 @@ const createNewRoom = async (req, res) => {
         roomName: roomName,
         reservationId: null,
         datesOccupied: [],
-        roomPrice: roomPrice
+        roomPrice: roomPrice,
+        roomDescription: roomDescription,
+        roomImages: roomImages
     });
 
     // Create and store the new room 
@@ -86,6 +88,8 @@ const updateRoom = async (req, res) => {
     room.roomName = roomName
     room.datesOccupied = datesOccupiedArray
     room.roomPrice = roomPrice
+    room.roomDescription = roomDescription
+    room.roomImages = roomImages
 
     const updatedRoom = await room.save()
 
