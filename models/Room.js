@@ -31,6 +31,10 @@ const roomSchema = new Schema({
         type: [String],
         required: true
     },
+    imageLabels: {
+        type: [String],
+        required: true
+    },
 })
 
 module.exports = mongoose.model('Room', roomSchema)

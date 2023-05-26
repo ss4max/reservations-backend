@@ -60,7 +60,7 @@ const createNewRoom = async (req, res) => {
 // @route PATCH /rooms
 // @access Private
 const updateRoom = async (req, res) => {
-    const { id, roomName, reservationId, datesOccupied, roomPrice } = req.body
+    const { id, roomName, reservationId, datesOccupied, roomPrice, roomDescription, roomImages } = req.body
 
     // Confirm data
     if (!id) {
