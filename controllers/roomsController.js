@@ -19,11 +19,11 @@ const getAllRooms = async (req, res) => {
 // @route POST /rooms
 // @access Private
 const createNewRoom = async (req, res) => {
-    const { roomName, reservationId, datesOccupied, roomPrice, roomDescription, roomImages } = req.body
+    const { roomName, reservationId, datesOccupied, roomPrice, roomDescription, roomImages, imageLabels } = req.body
 
     // Confirm data
-    if (!roomName || !roomPrice || !roomDescription || !roomImages) {
-        return res.status(400).json({ message: 'Room name, price, and reservation id is required' })
+    if (!roomName || !roomPrice || !roomDescription || !roomImages || !imageLabels) {
+        return res.status(400).json({ message: 'All fields required' })
     }
 
     // Check for duplicate title
@@ -42,7 +42,8 @@ const createNewRoom = async (req, res) => {
         datesOccupied: [],
         roomPrice: roomPrice,
         roomDescription: roomDescription,
-        roomImages: roomImages
+        roomImages: roomImages,
+        imageLabels: imageLabels
     });
 
     // Create and store the new room 
@@ -60,7 +61,7 @@ const createNewRoom = async (req, res) => {
 // @route PATCH /rooms
 // @access Private
 const updateRoom = async (req, res) => {
-    const { id, roomName, reservationId, datesOccupied, roomPrice, roomDescription, roomImages } = req.body
+    const { id, roomName, reservationId, datesOccupied, roomPrice, roomDescription, roomImages, imageLabels } = req.body
 
     // Confirm data
     if (!id) {
@@ -90,6 +91,7 @@ const updateRoom = async (req, res) => {
     room.roomPrice = roomPrice
     room.roomDescription = roomDescription
     room.roomImages = roomImages
+    room.imageLabels = imageLabels
 
     const updatedRoom = await room.save()
 
