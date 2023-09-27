@@ -18,6 +18,10 @@ const roomSchema = new Schema({
         type: String,
         required: true
     },
+    productId: {
+        type: String,
+        required: true
+    },
     datesOccupied: [DatesOccupiedSchema],
     roomPrice: {
         type: Number,

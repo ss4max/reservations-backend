@@ -9,11 +9,7 @@ const transactionSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
-    currency: {
-        type: String,
-        required: true
-    },
-    charge: {
+    paymentIntent: {
         type: Object,
         required: true
     }

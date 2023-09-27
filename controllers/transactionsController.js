@@ -39,6 +39,7 @@ const createNewTransaction = async (req, res) => {
         return res.status(409).json({ message: 'Duplicate found' })
     }
 
+    //find reservation
     const reservation = await Reservation.findOne({ id: reservationId })
 
     if (!reservation) return res.status(400).json({ message: 'Reservation not found' })

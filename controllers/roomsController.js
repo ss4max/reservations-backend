@@ -1,4 +1,5 @@
 const Room = require('../models/Room')
+const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // @desc Get all rooms 
 // @route GET /rooms
@@ -19,25 +20,38 @@ const getAllRooms = async (req, res) => {
 // @route POST /rooms
 // @access Private
 const createNewRoom = async (req, res) => {
-    const { roomName, reservationId, datesOccupied, roomPrice, roomDescription, roomImages, imageLabels } = req.body
+    const { roomName, roomPrice, roomDescription, roomImages, imageLabels } = req.body
 
     // Confirm data
     if (!roomName || !roomPrice || !roomDescription || !roomImages || !imageLabels) {
         return res.status(400).json({ message: 'All fields required' })
     }
 
-    // Check for duplicate title
+    // Check for duplicate room and product
     const duplicate = await Room.findOne({ roomName }).collation({ locale: 'en', strength: 2 }).lean().exec()
+    const productDuplicate = await stripe.products.search({
+        query: `active:\'true\' AND name:\'${roomName}\'`,
+    });
 
-    if (duplicate) {
+    if (duplicate || productDuplicate.data.length > 0) {
         return res.status(409).json({ message: 'Duplicate room' })
     }
 
     // Create objects with date and reservationId for datesOccupied array
     // const datesOccupiedArray = datesOccupied.map(date => tempObj = { date: date, reservationId: reservationId });
 
+    //Create new product
+    const product = await stripe.products.create({
+        name: roomName,
+        default_price_data: {
+            currency: 'thb',
+            unit_amount: roomPrice * 100
+        }
+    });
+
     const myDocument = new Room({
         roomName: roomName,
+        productId: product.id,
         reservationId: null,
         datesOccupied: [],
         roomPrice: roomPrice,
@@ -49,7 +63,7 @@ const createNewRoom = async (req, res) => {
     // Create and store the new room 
     const newRoom = await Room.create(myDocument)
 
-    if (newRoom) { // Created 
+    if (newRoom && product) { // Created 
         return res.status(201).json({ message: 'New room created' })
     } else {
         return res.status(400).json({ message: 'Invalid room data received' })
@@ -78,8 +92,12 @@ const updateRoom = async (req, res) => {
     // Check for duplicate title
     const duplicate = await Room.findOne({ roomName }).collation({ locale: 'en', strength: 2 }).lean().exec()
 
+    const productDuplicate = await stripe.products.search({
+        query: `active:\'true\' AND name:\'${roomName}\'`,
+    });
+
     // Allow renaming of the original room 
-    if (duplicate && duplicate?._id.toString() !== id) {
+    if (duplicate && duplicate?._id.toString() !== id || productDuplicate.data.length > 0) {
         return res.status(409).json({ message: 'Duplicate room' })
     }
 
@@ -95,7 +113,51 @@ const updateRoom = async (req, res) => {
 
     const updatedRoom = await room.save()
 
-    res.json(`'${updatedRoom.roomName}' updated`)
+    const productId = room.productId
+
+    //get product
+    const product = await stripe.products.retrieve(productId);
+
+    //get defaultPrice
+    const defaultPrice = await stripe.prices.retrieve(product.default_price);
+
+    let productUpdated
+
+    //if not price change don't add another price object
+    if (defaultPrice.unit_amount / 100 === roomPrice) {
+        productUpdated = await stripe.products.update(
+            productId,
+            {
+                name: roomName
+            }
+        );
+
+        if (productUpdated) { //created 
+            return res.json(`'${updatedRoom.roomName}' updated`)
+        } else {
+            return res.status(400).json({ message: 'Invalid product data received' })
+        }
+    }
+
+    const priceObj = await stripe.prices.create({
+        unit_amount: roomPrice * 100,
+        currency: 'thb',
+        product: productId,
+    });
+
+    productUpdated = await stripe.products.update(
+        productId,
+        {
+            name: roomName,
+            default_price: priceObj.id
+        }
+    );
+
+    if (productUpdated) { //created 
+        return res.json(`'${updatedRoom.roomName}' updated`)
+    } else {
+        return res.status(400).json({ message: 'Invalid product data received' })
+    }
 }
 
 // @desc Delete a room
@@ -116,11 +178,17 @@ const deleteRoom = async (req, res) => {
         return res.status(400).json({ message: 'Room not found' })
     }
 
+    const deleted = await stripe.products.del(room.productId);
+
     const result = await room.deleteOne()
 
     const reply = `Room '${result.roomName}' with ID ${result._id} deleted`
 
-    res.json(reply)
+    if (deleted) {
+        return res.json(reply)
+    } else {
+        return res.status(400).json({ message: 'Invalid product ID received' })
+    }
 }
 
 module.exports = {
