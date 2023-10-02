@@ -27,6 +27,13 @@ const getSession = async (req, res) => {
     //get payment intent object
     const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
 
+    //check for duplicate transaction
+    const duplicateCharge = await Transaction.findOne({ reservationId }).lean().exec()
+
+    if (duplicateCharge && updatedReservation) {
+        return res.send({ message: reservationId });
+    }
+
     //create transaction on success
     let transactionObject = new Transaction({
         reservationId,
@@ -37,7 +44,7 @@ const getSession = async (req, res) => {
     // Create and store new transaction 
     const transaction = await Transaction.create(transactionObject)
 
-    if (transaction && updatedReservation) res.send(session);
+    if (transaction && updatedReservation) res.send({ message: reservationId });
     else res.status(400).json({ message: 'Something went wrong' })
 }
 
@@ -87,45 +94,46 @@ const createSession = async (req, res) => {
 }
 
 const webhook = async (req, res) => {
-    let event;
 
-    // Check if webhook signing is configured.
-    if (process.env.STRIPE_WEBHOOK_SECRET) {
-        // Retrieve the event by verifying the signature using the raw body and secret.
-        let signature = req.headers['stripe-signature'];
+    const { sessionId } = req.body;
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-        try {
-            event = stripe.webhooks.constructEvent(
-                req.rawBody,
-                signature,
-                process.env.STRIPE_WEBHOOK_SECRET
-            );
-        } catch (err) {
-            console.log(`⚠️  Webhook signature verification failed.`);
-            return res.sendStatus(400);
-        }
-    } else {
-        // Webhook signing is recommended, but if the secret is not configured in `.env`,
-        // retrieve the event data directly from the request body.
-        event = req.body;
+    const reservationId = session.metadata.reservationId
+
+    //confirm data
+    if (!reservationId) {
+        return res.status(400).json({ message: 'No reservation ID found' })
     }
 
-    if (event.type === 'checkout.session.completed') {
-        console.log(`🔔  Payment received!`);
+    //find reservation and update to paid
+    const reservation = await Reservation.findOne({ id: reservationId })
 
-        // Note: If you need access to the line items, for instance to
-        // automate fullfillment based on the the ID of the Price, you'll
-        // need to refetch the Checkout Session here, and expand the line items:
-        //
-        // const session = await stripe.checkout.sessions.retrieve(
-        //   'cs_test_KdjLtDPfAjT1gq374DMZ3rHmZ9OoSlGRhyz8yTypH76KpN4JXkQpD2G0',
-        //   {
-        //     expand: ['line_items'],
-        //   }
-        // );
-        //
-        // const lineItems = session.line_items;
-    }
+    if (!reservation) return res.status(400).json({ message: 'Reservation not found' })
+
+    reservation.paymentStatus = 'paid'
+
+    const updatedReservation = await reservation.save()
+
+    //get payment intent object
+    const paymentIntent = await stripe.paymentIntents.retrieve(session.payment_intent);
+
+    //check for duplicate transaction
+    const duplicateCharge = await Transaction.findOne({ paymentIntent: { id: paymentIntent.id } }).collation({ locale: 'en', strength: 2 }).lean().exec()
+
+    if (duplicateCharge) return res.status(409).json({ message: 'Duplicate found' })
+
+    //create transaction on success
+    let transactionObject = new Transaction({
+        reservationId,
+        amount: session.amount_total / 100,
+        paymentIntent
+    })
+
+    // Create and store new transaction 
+    const transaction = await Transaction.create(transactionObject)
+
+    if (transaction && updatedReservation) res.send(session);
+    else res.status(400).json({ message: 'Something went wrong' })
 
     res.sendStatus(200);
 }
