@@ -207,21 +207,21 @@ const deleteReservation = async (req, res) => {
         return res.status(400).json({ message: 'Reservation ID Required' })
     }
 
-    // Does the user exist to delete?
+    // Does the reservation exist to delete?
     const reservation = await Reservation.findById(id).exec()
 
     if (!reservation) {
         return res.status(400).json({ message: 'Reservation not found' })
     }
 
-    const result = await reservation.deleteOne()
-
     //delete dates from room
     let date1 = new Date(reservation.checkInDate)
     let date2 = new Date(reservation.checkOutDate)
     let currentCheckedInDates = createCheckedInDates(date1, date2);
-    const roomModel = await Room.findOne({ roomName: result.room }).exec();
+    const roomModel = await Room.findOne({ roomName: reservation.room }).exec();
     roomModel.datesOccupied = deleteDates(roomModel.datesOccupied, currentCheckedInDates)
+
+    const result = await reservation.deleteOne()
 
     const updatedRoom = await roomModel.save()
 
