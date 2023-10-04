@@ -2,7 +2,7 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Transaction = require('../models/Transaction')
 const Reservation = require('../models/Reservation')
 
-const fee = 10
+const fee = process.env.PERCENT_FEE
 const feePercentage = fee * 0.01
 
 const getSession = async (req, res) => {
@@ -85,8 +85,8 @@ const createSession = async (req, res) => {
             reservationId: reservationId
         },
         // ?session_id={CHECKOUT_SESSION_ID} means the redirect will have the session ID set as a query param
-        success_url: `${domainURL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${domainURL}/payment/canceled`,
+        success_url: `${domainURL}/dash/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${domainURL}/dash/payment/canceled`,
         // automatic_tax: { enabled: true }
     });
 
