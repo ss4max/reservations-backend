@@ -178,11 +178,14 @@ const deleteRoom = async (req, res) => {
         return res.status(400).json({ message: 'Room not found' })
     }
 
-    const deleted = await stripe.products.del(room.productId);
+    //set stripe product to not active
+    const deleted = await stripe.products.update(room.productId, { active: false });
 
     const result = await room.deleteOne()
 
     const reply = `Room '${result.roomName}' with ID ${result._id} deleted`
+
+    console.log(deleted)
 
     if (deleted) {
         return res.json(reply)
