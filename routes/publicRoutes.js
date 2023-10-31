@@ -7,6 +7,9 @@ router.route('/')
 
 router.route('/payment')
     .get(publicController.getAllReservations)
+    .post(publicController.createNewPayment)
+
+router.route('/reservation')
     .post(publicController.createNewReservation)
 
 module.exports = router
