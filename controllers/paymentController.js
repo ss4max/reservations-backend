@@ -138,8 +138,6 @@ const webhook = async (req, res) => {
     res.sendStatus(200);
 }
 
-
-
 module.exports = {
     getSession,
     createSession,
