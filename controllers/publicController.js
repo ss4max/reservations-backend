@@ -161,9 +161,7 @@ const createNewPayment = async (req, res) => {
     // Other optional params include:
     // For full details see https://stripe.com/docs/api/checkout/sessions/create
 
-    const amount = paymentAmount * nights
-
-    console.log(price)
+    const amount = paymentAmount
 
     const session = await stripe.checkout.sessions.create({
         mode: 'payment',
