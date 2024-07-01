@@ -97,7 +97,7 @@ const updateRoom = async (req, res) => {
     });
 
     // Allow renaming of the original room 
-    if (duplicate && duplicate?._id.toString() !== id || productDuplicate.data.length > 0) {
+    if (duplicate && duplicate?._id.toString() !== id) {
         return res.status(409).json({ message: 'Duplicate room' })
     }
 
