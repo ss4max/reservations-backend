@@ -3,7 +3,7 @@ const allowedOrigins = [
     'http://localhost:3500',
     'https://checkout.stripe.com/c/pay/',
     'https://stripe.com',
-    'https://tothemaxstay.onrender.com/',
+    'https://tothemaxstay.onrender.com',
     // 'https://dandrepairshop.com'
 ]
 
