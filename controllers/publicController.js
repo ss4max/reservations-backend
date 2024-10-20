@@ -183,8 +183,8 @@ const createNewPayment = async (req, res) => {
             reservationId: reservation.id
         },
         // ?session_id={CHECKOUT_SESSION_ID} means the redirect will have the session ID set as a query param
-        success_url: `${domainURL}/book/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${domainURL}/book/payment/canceled`,
+        success_url: `${domainURL}book/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${domainURL}book/payment/canceled`,
         // automatic_tax: { enabled: true }
     });
 
