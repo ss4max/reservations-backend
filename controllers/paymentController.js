@@ -16,7 +16,8 @@ const getSession = async (req, res) => {
     }
 
     //find reservation and update to paid
-    const reservation = await Reservation.findOne({ id: reservationId })
+    // const reservation = await Reservation.findOne({ id: reservationId })
+    const reservation = await Reservation.findOne({ _id: reservationId })
 
     if (!reservation) return res.status(400).json({ message: 'Reservation not found' })
 
@@ -86,7 +87,7 @@ const createSession = async (req, res) => {
         },
         // ?session_id={CHECKOUT_SESSION_ID} means the redirect will have the session ID set as a query param
         success_url: `${domainURL}/dash/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${domainURL}/dash/payment/canceled`,
+        cancel_url: `${domainURL}/dash/payment/canceled?reservation_id=${reservationId}`,
         // automatic_tax: { enabled: true }
     });
 
