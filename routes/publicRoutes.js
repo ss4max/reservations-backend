@@ -11,5 +11,6 @@ router.route('/payment')
 
 router.route('/reservation')
     .post(publicController.createNewReservation)
+    .delete(publicController.deleteNewReservation)
 
 module.exports = router

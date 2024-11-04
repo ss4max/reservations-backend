@@ -32,6 +32,74 @@ function createCheckedInDates(checkIn, checkOut) {
     return dates
 }
 
+function getTimes(datesArray) {
+    let tempArray = []
+    for (let i = 0; i < datesArray.length; i++) {
+        tempArray[i] = datesArray[i].getTime()
+    }
+
+    return tempArray
+}
+
+function getDates(times) {
+    let tempArray = []
+    for (let i = 0; i < times.length; i++) {
+        tempArray[i] = new Date(times[i])
+    }
+    return tempArray
+}
+
+function deleteDates(datesArrayOfObjects, deleteTheseDates) {
+
+    const reservationId = datesArrayOfObjects[0]?.reservationId
+
+    //create an array of dates (no reservationId)
+    const dates = getDatesArray(datesArrayOfObjects)
+
+    //deletes dates of different time
+    const arrayOfDifferentTimes = getTimes(dates).filter((x) => !getTimes(deleteTheseDates).includes(x));
+
+    const arrayOfDates = getDates(arrayOfDifferentTimes)
+
+    //add reservationId back to each date
+    const datesOccupiedArrayOfObjects = arrayOfDates.map(date => tempObj = { date: date, reservationId: reservationId });
+
+    return datesOccupiedArrayOfObjects
+}
+
+function addReservationId(dates, reservationId) {
+    const datesOccupiedArrayOfObjects = dates.map(date => tempObj = { date: date, reservationId: reservationId });
+    return datesOccupiedArrayOfObjects
+}
+
+
+function hasDate(occupiedDateObjects, reservationDates) {
+
+    //create an array of dates (no reservationId)
+    const occupiedDates = getDatesArray(occupiedDateObjects)
+
+    let foundBoolean = false
+
+    reservationDates.forEach(date => {
+        let found = occupiedDates.find(occupiedDate => occupiedDate.getTime() === date.getTime())
+        if (found) {
+            foundBoolean = true
+        }
+    });
+
+    return foundBoolean
+}
+
+function createCheckedInDates(checkIn, checkOut) {
+    let dates = []
+    let newDate = new Date(checkIn)
+    while (checkIn.getTime() !== checkOut.getTime()) {
+        dates.push(newDate)
+        newDate = new Date(checkIn.setDate(checkIn.getDate() + 1))
+    }
+    return dates
+}
+
 const getDatesArray = (datesArrayObj) => {
     return datesArrayObj.map((obj) => obj.date);
 }
@@ -184,7 +252,7 @@ const createNewPayment = async (req, res) => {
         },
         // ?session_id={CHECKOUT_SESSION_ID} means the redirect will have the session ID set as a query param
         success_url: `${domainURL}book/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${domainURL}book/payment/canceled`,
+        cancel_url: `${domainURL}book/payment/canceled?reservation_id=${reservation?.id}`,
         // automatic_tax: { enabled: true }
     });
 
@@ -196,10 +264,47 @@ const createNewPayment = async (req, res) => {
     }
 }
 
+const deleteNewReservation = async (req, res) => {
+    const { id } = req.body
+
+    console.log(id)
+
+    // Confirm data
+    if (!id) {
+        return res.status(400).json({ message: 'Reservation ID Required' })
+    }
+
+    // Does the reservation exist to delete?
+    const reservation = await Reservation.findById(id).exec()
+
+    if (!reservation) {
+        return res.status(400).json({ message: 'Reservation not found' })
+    }
+
+    //delete dates from room
+    let date1 = new Date(reservation.checkInDate)
+    let date2 = new Date(reservation.checkOutDate)
+    let currentCheckedInDates = createCheckedInDates(date1, date2);
+    const roomModel = await Room.findOne({ roomName: reservation.room }).exec();
+    roomModel.datesOccupied = deleteDates(roomModel.datesOccupied, currentCheckedInDates)
+
+    const result = await reservation.deleteOne()
+
+    const updatedRoom = await roomModel.save()
+
+    if (!updatedRoom) {
+        res.json({ message: `${result.room} dates not updated` })
+    }
+
+    const reply = `Reservation with ${result.guest.name} with ID ${result._id} deleted`
+
+    res.json(reply)
+}
 
 module.exports = {
     getAllRooms,
     getAllReservations,
     createNewReservation,
-    createNewPayment
+    createNewPayment,
+    deleteNewReservation
 }
