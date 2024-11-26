@@ -267,8 +267,6 @@ const createNewPayment = async (req, res) => {
 const deleteNewReservation = async (req, res) => {
     const { id } = req.body
 
-    console.log(id)
-
     // Confirm data
     if (!id) {
         return res.status(400).json({ message: 'Reservation ID Required' })

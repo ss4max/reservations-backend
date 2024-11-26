@@ -185,8 +185,6 @@ const deleteRoom = async (req, res) => {
 
     const reply = `Room '${result.roomName}' with ID ${result._id} deleted`
 
-    console.log(deleted)
-
     if (deleted) {
         return res.json(reply)
     } else {
