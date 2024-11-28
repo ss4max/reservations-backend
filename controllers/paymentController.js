@@ -50,7 +50,7 @@ const getSession = async (req, res) => {
 }
 
 const createSession = async (req, res) => {
-    const { roomName, amount, nights, reservationId } = req.body;
+    const { roomName, amount, nights, reservationId, language } = req.body;
     const domainURL = process.env.DOMAIN;
 
     //get product
@@ -89,6 +89,7 @@ const createSession = async (req, res) => {
         success_url: `${domainURL}/dash/payment/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${domainURL}/dash/payment/canceled?reservation_id=${reservationId}`,
         // automatic_tax: { enabled: true }
+        locale: language
     });
 
     return res.status(200).json({ message: session.url })
