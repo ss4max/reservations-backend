@@ -39,6 +39,7 @@ app.use('/promptPays', require('./routes/promptPayRoutes'))
 app.use('/qrCodes', require('./routes/qrCodeRoutes'))
 app.use('/payment', require('./routes/payment'))
 app.use('/products', require('./routes/products'))
+app.use('/translation', require('./routes/translationRoutes'))
 
 app.all('*', (req, res) => {
     res.status(404)
