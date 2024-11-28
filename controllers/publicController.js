@@ -178,7 +178,7 @@ const createNewReservation = async (req, res) => {
 }
 
 const createNewPayment = async (req, res) => {
-    const { room, name, email, phone, adults, kids, checkInDate, checkOutDate, paymentStatus, paymentAmount, note, nights } = req.body
+    const { room, name, email, phone, adults, kids, checkInDate, checkOutDate, paymentStatus, paymentAmount, note, nights, language } = req.body
 
     //create new reservation
     // Confirm data
@@ -254,6 +254,7 @@ const createNewPayment = async (req, res) => {
         success_url: `${domainURL}/book/payment/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${domainURL}/book/payment/canceled?reservation_id=${reservation?.id}`,
         // automatic_tax: { enabled: true }
+        locale: language
     });
 
     if (reservation && updatedRoom) { //created 
