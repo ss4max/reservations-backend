@@ -50,7 +50,6 @@ const reservationSchema = new mongoose.Schema(
             default: 'None'
         },
         createdAt: { type: Date, default: Date.now },
-        expiresAt: { type: Date },
     }
 )
 
