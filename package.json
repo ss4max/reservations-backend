@@ -23,6 +23,7 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.5.0",
     "mongoose-sequence": "^5.3.1",
+    "node-cron": "^4.2.1",
     "omise": "^0.10.1",
     "stripe": "^13.3.0",
     "uuid": "^8.3.2"
