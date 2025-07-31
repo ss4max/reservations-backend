@@ -93,6 +93,8 @@ const createSession = async (req, res) => {
         expires_at: Math.floor(Date.now() / 1000) + 30 * 60 // 30 minutes
     });
 
+    console.log('session.url', session.url)
+
     return res.status(200).json({ message: session.url })
 }
 
