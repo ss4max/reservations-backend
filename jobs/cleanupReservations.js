@@ -4,8 +4,6 @@ const Room = require('../models/Room')
 const deleteExpiredPendingReservations = async () => {
     const cutoff = new Date(Date.now() - 15 * 60 * 1000) // 15 minutes ago
 
-    console.log('deleteExpiredPendingReservations job started at:', new Date().toISOString())
-
     const expiredReservations = await Reservation.find({
         paymentStatus: 'pending',
         createdAt: { $lt: cutoff }
