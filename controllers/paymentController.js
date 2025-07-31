@@ -90,8 +90,7 @@ const createSession = async (req, res) => {
         cancel_url: `${domainURL}/dash/payment/canceled?reservation_id=${reservationId}`,
         // automatic_tax: { enabled: true }
         locale: language,
-        // expires_at: Math.floor(Date.now() / 1000) + 15 * 60, // 15 minutes from now
-        expires_at: Math.floor(Date.now() / 1000) + 1 * 60, // 1 minutes from now
+        expires_at: Math.floor(Date.now() / 1000) + 30 * 60 // 30 minutes
     });
 
     return res.status(200).json({ message: session.url })
