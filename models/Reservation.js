@@ -50,16 +50,7 @@ const reservationSchema = new mongoose.Schema(
             default: 'None'
         },
         createdAt: { type: Date, default: Date.now },
-        expiresAt: { type: Date },
     }
 )
-
-reservationSchema.index(
-    { createdAt: 1 },
-    {
-        expireAfterSeconds: 900, // 15 minutes = 900 seconds
-        partialFilterExpression: { paymentStatus: 'pending' }
-    }
-);
 
 module.exports = mongoose.model('Reservation', reservationSchema)

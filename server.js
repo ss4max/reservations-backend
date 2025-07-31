@@ -64,3 +64,11 @@ mongoose.connection.on('error', err => {
     console.log(err)
     logEvents(`${err.no}: ${err.code}\t${err.syscall}\t${err.hostname}`, 'mongoErrLog.log')
 })
+
+const cron = require('node-cron')
+const deleteExpiredPendingReservations = require('./jobs/cleanupReservations')
+
+// Run every minute
+cron.schedule('* * * * *', async () => {
+    await deleteExpiredPendingReservations()
+})
