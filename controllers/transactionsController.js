@@ -12,8 +12,19 @@ const Reservation = require('../models/Reservation')
 // @access Private
 const getAllTransactions = async (req, res) => {
     // Get all transactions from MongoDB
-    const transactions = await Transaction.find().lean()
-
+    const transactions = await Transaction.find({}, {
+        reservationId: 1,
+        amount: 1,
+        amount_received: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        "paymentIntent.amount": 1,
+        "paymentIntent.currency": 1,
+        "paymentIntent.status": 1,
+        "paymentIntent.amount_received": 1,
+        receipt_email: 1,
+        status: 1
+    }).lean()
     // If no transactions 
     if (!transactions?.length) {
         return res.status(400).json({ message: 'No transactions found' })
