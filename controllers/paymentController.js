@@ -53,6 +53,8 @@ const createSession = async (req, res) => {
     const { roomName, amount, nights, reservationId, language } = req.body;
     const domainURL = process.env.DOMAIN;
 
+    console.log('language', language)
+
     const allowedLocales = [
         'auto', 'bg', 'cs', 'da', 'de', 'el', 'en', 'en-GB', 'es', 'es-419',
         'et', 'fi', 'fil', 'fr', 'fr-CA', 'hr', 'hu', 'id', 'it', 'ja', 'ko',
