@@ -188,8 +188,10 @@ const createNewPayment = async (req, res) => {
         'sk', 'sl', 'sv', 'th', 'tr', 'vi', 'zh', 'zh-HK', 'zh-TW'
     ];
 
+    let languageChecked = language
+
     if (!allowedLocales.includes(language)) {
-        language = 'auto'; // fallback default
+        languageChecked = 'auto'; // fallback default
     }
 
     //create new reservation
@@ -266,7 +268,7 @@ const createNewPayment = async (req, res) => {
         success_url: `${domainURL}/book/payment/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${domainURL}/book/payment/canceled?reservation_id=${reservation?.id}`,
         // automatic_tax: { enabled: true }
-        locale: language
+        locale: languageChecked
     });
 
     if (reservation && updatedRoom) { //created 

@@ -62,8 +62,10 @@ const createSession = async (req, res) => {
         'sk', 'sl', 'sv', 'th', 'tr', 'vi', 'zh', 'zh-HK', 'zh-TW'
     ];
 
+    let languageChecked = language
+
     if (!allowedLocales.includes(language)) {
-        language = 'auto'; // fallback default
+        languageChecked = 'auto'; // fallback default
     }
 
     //get product
@@ -102,7 +104,7 @@ const createSession = async (req, res) => {
         success_url: `${domainURL}/dash/payment/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${domainURL}/dash/payment/canceled?reservation_id=${reservationId}`,
         // automatic_tax: { enabled: true }
-        locale: language,
+        locale: languageChecked,
         expires_at: Math.floor(Date.now() / 1000) + 30 * 60 // 30 minutes
     });
 
