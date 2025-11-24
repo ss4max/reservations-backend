@@ -1,5 +1,4 @@
 require('dotenv').config()
-require('express-async-errors')
 const express = require('express')
 const app = express()
 const path = require('path')
@@ -35,22 +34,22 @@ app.use('/reservations', require('./routes/reservationRoutes'))
 app.use('/rooms', require('./routes/roomRoutes'))
 app.use('/transactions', require('./routes/transactionRoutes'))
 app.use('/' + process.env.WEBHOOK_URL, require('./routes/webhookRoutes'))
-app.use('/cards', require('./routes/cardRoutes'))
 app.use('/qrCodes', require('./routes/qrCodeRoutes'))
 app.use('/payment', require('./routes/payment'))
 app.use('/products', require('./routes/products'))
 app.use('/translation', require('./routes/translationRoutes'))
 
-app.all('*', (req, res) => {
-    res.status(404)
+app.all('/{*any}', (req, res) => {
+    res.status(404);
+
     if (req.accepts('html')) {
-        res.sendFile(path.join(__dirname, 'views', '404.html'))
+        res.sendFile(path.join(__dirname, 'views', '404.html'));
     } else if (req.accepts('json')) {
-        res.json({ message: '404 Not Found' })
+        res.json({ message: '404 Not Found' });
     } else {
-        res.type('txt').send('404 Not Found')
+        res.type('txt').send('404 Not Found');
     }
-})
+});
 
 app.use(errorHandler)
 
