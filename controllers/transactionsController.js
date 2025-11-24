@@ -1,8 +1,3 @@
-var omise = require('omise')({
-    'secretKey': process.env.OMISE_TOKEN_SECRET,
-    'omiseVersion': '2019-05-29'
-})
-
 const Transaction = require('../models/Transaction')
 const Reservation = require('../models/Reservation')
 
