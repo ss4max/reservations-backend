@@ -37,7 +37,7 @@ const createNewWebhook = async (req, res) => {
 // @route PATCH /webhooks
 // @access Private
 const updateWebhook = async (req, res) => {
-    res.json({ message: `Update webhook happens in /promptPays` })
+    res.json({ message: `You can't update webhook happens` })
 }
 
 // @desc Delete a webhook

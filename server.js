@@ -1,15 +1,37 @@
+// server.js
+
+// 1. Revert to CommonJS require() for all dependencies
 require('dotenv').config()
-require('express-async-errors')
 const express = require('express')
 const app = express()
 const path = require('path')
-const { logger, logEvents } = require('./middleware/logger')
+// Import the logger using the new .js file extension
+const { logger, logEvents } = require('./middleware/logger.js')
 const errorHandler = require('./middleware/errorHandler')
 const cookieParser = require('cookie-parser')
 const cors = require('cors')
 const corsOptions = require('./config/corsOptions')
 const connectDB = require('./config/dbConn')
 const mongoose = require('mongoose')
+const cron = require('node-cron') // Revert to CommonJS for node-cron
+const deleteExpiredPendingReservations = require('./jobs/cleanupReservations') // Revert to CommonJS
+
+// --- Route Imports (Revert to require()) ---
+const rootRoute = require('./routes/root')
+const publicRoutes = require('./routes/publicRoutes')
+const authRoutes = require('./routes/authRoutes')
+const userRoutes = require('./routes/userRoutes')
+const reservationRoutes = require('./routes/reservationRoutes')
+const roomRoutes = require('./routes/roomRoutes')
+const transactionRoutes = require('./routes/transactionRoutes')
+const webhookRoutes = require('./routes/webhookRoutes')
+const paymentRoutes = require('./routes/payment')
+const productsRoutes = require('./routes/products')
+const translationRoutes = require('./routes/translationRoutes')
+
+// Remove the ESM path definitions (import.meta.url, etc.)
+// __dirname is automatically available again in CommonJS
+
 mongoose.set('strictQuery', false)
 const PORT = process.env.PORT || 3500
 
@@ -25,33 +47,35 @@ app.use(express.json())
 
 app.use(cookieParser())
 
+// Use global __dirname for static path
 app.use('/', express.static(path.join(__dirname, 'public')))
 
-app.use('/', require('./routes/root'))
-app.use('/book', require('./routes/publicRoutes'))
-app.use('/auth', require('./routes/authRoutes'))
-app.use('/users', require('./routes/userRoutes'))
-app.use('/reservations', require('./routes/reservationRoutes'))
-app.use('/rooms', require('./routes/roomRoutes'))
-app.use('/transactions', require('./routes/transactionRoutes'))
-app.use('/' + process.env.WEBHOOK_URL, require('./routes/webhookRoutes'))
-app.use('/cards', require('./routes/cardRoutes'))
-app.use('/promptPays', require('./routes/promptPayRoutes'))
-app.use('/qrCodes', require('./routes/qrCodeRoutes'))
-app.use('/payment', require('./routes/payment'))
-app.use('/products', require('./routes/products'))
-app.use('/translation', require('./routes/translationRoutes'))
+// 2. Fix: Use the router objects via app.use()
+app.use('/', rootRoute)
+app.use('/book', publicRoutes)
+app.use('/auth', authRoutes)
+app.use('/users', userRoutes)
+app.use('/reservations', reservationRoutes)
+app.use('/rooms', roomRoutes)
+app.use('/transactions', transactionRoutes)
+app.use('/' + process.env.WEBHOOK_URL, webhookRoutes)
+app.use('/payment', paymentRoutes)
+app.use('/products', productsRoutes)
+app.use('/translation', translationRoutes)
 
-app.all('*', (req, res) => {
-    res.status(404)
+// 3. Fix: Revert the catch-all route back to the simpler '*' syntax (which works in Express 4/5 CommonJS)
+app.all('/{*any}', (req, res) => {
+    res.status(404);
+
     if (req.accepts('html')) {
-        res.sendFile(path.join(__dirname, 'views', '404.html'))
+        // Use global __dirname for file path
+        res.sendFile(path.join(__dirname, 'views', '404.html'));
     } else if (req.accepts('json')) {
-        res.json({ message: '404 Not Found' })
+        res.json({ message: '404 Not Found' });
     } else {
-        res.type('txt').send('404 Not Found')
+        res.type('txt').send('404 Not Found');
     }
-})
+});
 
 app.use(errorHandler)
 
@@ -63,4 +87,9 @@ mongoose.connection.once('open', () => {
 mongoose.connection.on('error', err => {
     console.log(err)
     logEvents(`${err.no}: ${err.code}\t${err.syscall}\t${err.hostname}`, 'mongoErrLog.log')
+})
+
+// Run every minute
+cron.schedule('* * * * *', async () => {
+    await deleteExpiredPendingReservations()
 })

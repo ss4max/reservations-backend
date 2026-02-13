@@ -180,6 +180,20 @@ const createNewReservation = async (req, res) => {
 const createNewPayment = async (req, res) => {
     const { room, name, email, phone, adults, kids, checkInDate, checkOutDate, paymentStatus, paymentAmount, note, nights, language } = req.body
 
+    //locales check
+    const allowedLocales = [
+        'auto', 'bg', 'cs', 'da', 'de', 'el', 'en', 'en-GB', 'es', 'es-419',
+        'et', 'fi', 'fil', 'fr', 'fr-CA', 'hr', 'hu', 'id', 'it', 'ja', 'ko',
+        'lt', 'lv', 'ms', 'mt', 'nb', 'nl', 'pl', 'pt', 'pt-BR', 'ro', 'ru',
+        'sk', 'sl', 'sv', 'th', 'tr', 'vi', 'zh', 'zh-HK', 'zh-TW'
+    ];
+
+    let languageChecked = language
+
+    if (!allowedLocales.includes(language)) {
+        languageChecked = 'auto'; // fallback default
+    }
+
     //create new reservation
     // Confirm data
     if (!room || !name || !email || !phone || !adults || !checkInDate || !checkOutDate || !paymentAmount || !nights) {
@@ -254,7 +268,7 @@ const createNewPayment = async (req, res) => {
         success_url: `${domainURL}/book/payment/success?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${domainURL}/book/payment/canceled?reservation_id=${reservation?.id}`,
         // automatic_tax: { enabled: true }
-        locale: language
+        locale: languageChecked
     });
 
     if (reservation && updatedRoom) { //created 
